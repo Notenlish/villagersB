@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "notenlish.villagersb.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"ExampleMixin",
+		"VillagersBreedDontWaitMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
