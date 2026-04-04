@@ -31,7 +31,7 @@ public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
     @Inject(method="canBreed", at=@At("HEAD"), cancellable = true)
     public void injectCanBreed(CallbackInfoReturnable<Boolean> info) {
         // removed the check for this.getAge()
-        info.setReturnValue(this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping());
+        info.setReturnValue(this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping() && !this.isBaby());
     }
     // I am overriding this
     /*
