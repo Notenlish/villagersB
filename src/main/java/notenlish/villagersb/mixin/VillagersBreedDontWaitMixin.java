@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Villager.class)
 public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
 
+    // needed because this extends abstractvillager class
     protected VillagersBreedDontWaitMixin(EntityType<? extends AbstractVillager> entityType, Level level) {
         super(entityType, level);
     }
@@ -23,9 +24,6 @@ public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
 
     @Shadow
     private int foodLevel;
-
-    // @Shadow
-    // public abstract boolean isSleeping();
 
     // cancellable=True makes it stop the original method
     @Inject(method="canBreed", at=@At("HEAD"), cancellable = true)
