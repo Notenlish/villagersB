@@ -4,11 +4,21 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
+import notenlish.villagersb.ServerBoundVillagersbCarryPayload;
 import notenlish.villagersb.Villagersb;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
 
 public class VillagersbClient implements ClientModInitializer {
 	@Override
@@ -27,8 +37,30 @@ public class VillagersbClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (PickUpVillagerKeyMapping.consumeClick()) {
-				if (client.player != null) {
-					client.player.sendSystemMessage(Component.literal("Key pressed!!!"));
+				if (client.player != null && client.level != null) {
+
+					double distance = 5.0;
+					List<Villager> villagers_list = client.level.getEntitiesOfClass(Villager.class, client.player.getBoundingBox().inflate(10), o -> o.distanceTo(client.player) < distance);
+					client.player.sendSystemMessage(Component.literal(String.format("fuck you " + villagers_list)));
+
+					float closest = 99999;
+					int idOfClosestVillager = -1;
+					for (Villager villager: villagers_list) {
+						float distanceToPlayer = villager.distanceTo(client.player);
+						if (distanceToPlayer < closest ) {
+							closest = distanceToPlayer;
+							idOfClosestVillager = villager.getId();
+						}
+					}
+
+					if (idOfClosestVillager != -1) {
+						client.player.sendSystemMessage(Component.literal("ID of closest villager: " + idOfClosestVillager));
+
+						ServerBoundVillagersbCarryPayload payload = new ServerBoundVillagersbCarryPayload(idOfClosestVillager);
+						ClientPlayNetworking.send(payload);
+					} else {
+						client.player.sendSystemMessage(Component.literal("No villagers :("));
+					}
 				}
 			}
 		});
