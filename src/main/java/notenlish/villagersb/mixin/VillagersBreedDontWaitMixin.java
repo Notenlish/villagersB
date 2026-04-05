@@ -32,6 +32,4 @@ public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
         info.setReturnValue(this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping() && !this.isBaby());
     }
 
-
-
 }

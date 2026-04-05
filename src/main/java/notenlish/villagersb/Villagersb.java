@@ -138,7 +138,7 @@ public class Villagersb implements ModInitializer {
                 );
             }
 
-            // this doesn't fucking work, it briefly keeps the job and then says, umm achtually fuck you
+            // this doesn't fucking work, it briefly keeps the job and then says, umm achtually fuck you :nerd_emoji:
             // HolderGetter.Provider registries = server_level.registryAccess();
             // var villager_data = villager.getVillagerData();
             // var new_data = villager_data.withProfession(registries, villager_profession_rk);
@@ -158,6 +158,7 @@ public class Villagersb implements ModInitializer {
                 ResourceKey<VillagerProfession> carried_villager_profession = context.player().getAttachedOrSet(CARRIED_VILLAGER_PROFESSION_ATTACHMENT, VillagerProfession.NONE);
 
                 int ent_id = payload.entityId();
+                // if entity actually exists
                 if (ent_id != -1) {
                     Entity entity = context.player().level().getEntity(payload.entityId());
                     if (entity instanceof Villager) {
@@ -168,7 +169,7 @@ public class Villagersb implements ModInitializer {
 
                             SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
 
-                        } else {
+                        } else { // player was not carrying a villager, but now will start carrying
                             context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, true);
                             // LOGGER.info("Set attachment to true");
                             context.player().setAttached(PLAYER_HAS_BABY_VILLAGER_ATTACHMENT, ((Villager) entity).isBaby());
@@ -197,11 +198,6 @@ public class Villagersb implements ModInitializer {
                         SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
                     }
                 }
-
-
-                // if (entity instanceof LivingEntity livingEntity && livingEntity.closerThan(context.player(), 5)) {
-                //    livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100));
-                // }
         });
     }
 }

@@ -3,7 +3,6 @@
 	"package": "notenlish.villagersb.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ExampleMixin",
 		"VillagersBreedDontWaitMixin",
 		"DontBeLazyIfBribedMixin"
 	],
