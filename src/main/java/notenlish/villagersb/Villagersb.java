@@ -10,13 +10,17 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -26,6 +30,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerData;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -59,6 +65,15 @@ public class Villagersb implements ModInitializer {
                     )
     );
 
+    public static final AttachmentType<ResourceKey<VillagerProfession>> CARRIED_VILLAGER_PROFESSION_ATTACHMENT = AttachmentRegistry.create(
+            Identifier.fromNamespaceAndPath("villagersb", "carried_villager_profession_attachment"),
+            villagerProfessionBuilder -> villagerProfessionBuilder.initializer(() -> VillagerProfession.NONE)
+                    .syncWith(
+                            ResourceKey.streamCodec(Registries.VILLAGER_PROFESSION),
+                            AttachmentSyncPredicate.all()
+                    )
+    );
+
     @Override
     public void onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -76,7 +91,7 @@ public class Villagersb implements ModInitializer {
         server.getPlayerList().broadcastSystemMessage(msg, false); // false is for chat
     }
 
-    private void SpawnVillagerNearPlayer(MinecraftServer server, ServerPlayer player, boolean is_baby) {
+    private void SpawnVillagerNearPlayer(MinecraftServer server, ServerPlayer player, boolean is_baby, ResourceKey<VillagerProfession> villager_profession_rk) {
         var player_pos = player.position();
         var look = player.getLookAngle();
         var flatLook = new Vec3(look.x, 0, look.z);
@@ -92,11 +107,20 @@ public class Villagersb implements ModInitializer {
                 false
         );
 
-
         if (villager != null) {
             villager.setBaby(is_baby);
-            // move to infront of the player
+
+            var server_level = (ServerLevel)player.level();
+
+            // move to in front of the player
             villager.setPos(player_pos.add(flatLook.scale(1.5)).scale(1.0));
+
+            // this doesn't fucking work, it briefly keeps the job and then says, umm achtually fuck you
+            // HolderGetter.Provider registries = server_level.registryAccess();
+            // var villager_data = villager.getVillagerData();
+            // var new_data = villager_data.withProfession(registries, villager_profession_rk);
+            // villager.setVillagerData(new_data);
+
             player.level().addFreshEntity(villager);
         }
     }
@@ -108,6 +132,7 @@ public class Villagersb implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ServerBoundVillagersbCarryPayload.TYPE, (payload, context) -> {
                 Boolean player_has_villager = context.player().getAttachedOrSet(PLAYER_HAS_VILLAGER_ATTACHMENT, false);
                 Boolean player_has_baby = context.player().getAttachedOrSet(PLAYER_HAS_BABY_VILLAGER_ATTACHMENT, false);
+                ResourceKey<VillagerProfession> carried_villager_profession = context.player().getAttachedOrSet(CARRIED_VILLAGER_PROFESSION_ATTACHMENT, VillagerProfession.NONE);
 
                 int ent_id = payload.entityId();
                 if (ent_id != -1) {
@@ -118,12 +143,17 @@ public class Villagersb implements ModInitializer {
                             context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, false);
                             LOGGER.info("Set attachment to false");
 
-                            SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby);
+                            SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
 
                         } else {
                             context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, true);
                             LOGGER.info("Set attachment to true");
                             context.player().setAttached(PLAYER_HAS_BABY_VILLAGER_ATTACHMENT, ((Villager) entity).isBaby());
+
+                            var profession = ((Villager) entity).getVillagerData().profession();
+                            var professionResourceKey = profession.unwrapKey().orElseThrow();
+                            context.player().setAttached(CARRIED_VILLAGER_PROFESSION_ATTACHMENT, professionResourceKey);
+
                             entity.discard();  // remove without loot appearing
                         }
                     }
@@ -133,7 +163,7 @@ public class Villagersb implements ModInitializer {
                         context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, false);
                         LOGGER.info("Set attachment to false");
 
-                        SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby);
+                        SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
                     }
                 }
 

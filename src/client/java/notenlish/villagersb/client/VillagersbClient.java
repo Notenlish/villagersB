@@ -41,7 +41,7 @@ public class VillagersbClient implements ClientModInitializer {
 
 					double distance = 5.0;
 					List<Villager> villagers_list = client.level.getEntitiesOfClass(Villager.class, client.player.getBoundingBox().inflate(10), o -> o.distanceTo(client.player) < distance);
-					client.player.sendSystemMessage(Component.literal(String.format("villagers: " + villagers_list)));
+					// client.player.sendSystemMessage(Component.literal(String.format("villagers: " + villagers_list)));
 
 					float closest = 99999;
 					int idOfClosestVillager = -1;
@@ -59,7 +59,6 @@ public class VillagersbClient implements ClientModInitializer {
 						ServerBoundVillagersbCarryPayload payload = new ServerBoundVillagersbCarryPayload(idOfClosestVillager);
 						ClientPlayNetworking.send(payload);
 					} else {
-						client.player.sendSystemMessage(Component.literal("No villagers :("));
 						ServerBoundVillagersbCarryPayload payload = new ServerBoundVillagersbCarryPayload(idOfClosestVillager);
 						ClientPlayNetworking.send(payload);
 					}
