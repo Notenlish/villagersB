@@ -12,6 +12,9 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
+import net.minecraft.core.particles.ColorParticleOption;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -46,6 +49,8 @@ public class Villagersb implements ModInitializer {
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    ColorParticleOption special_wind_particle = ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 1.0f,1.0f,1.0f);
 
     public static final AttachmentType<Boolean> PLAYER_HAS_BABY_VILLAGER_ATTACHMENT = AttachmentRegistry.create(
             Identifier.fromNamespaceAndPath("villagers", "player_has_baby_villager_attachment"),
@@ -96,10 +101,12 @@ public class Villagersb implements ModInitializer {
         var look = player.getLookAngle();
         var flatLook = new Vec3(look.x, 0, look.z);
 
-        SendMsgToChatEveryone(server, Component.literal("Player look angle " + look));
+        // SendMsgToChatEveryone(server, Component.literal("Player look angle " + look));
+
+        var curLevelDimension = server.getLevel(player.level().dimension());
 
         Villager villager = EntityType.VILLAGER.create(
-                server.getLevel(player.level().dimension()),
+                curLevelDimension,
                 null,
                 new BlockPos(0,0,0),
                 EntitySpawnReason.NATURAL,
@@ -110,10 +117,26 @@ public class Villagersb implements ModInitializer {
         if (villager != null) {
             villager.setBaby(is_baby);
 
-            var server_level = (ServerLevel)player.level();
-
             // move to in front of the player
             villager.setPos(player_pos.add(flatLook.scale(1.5)).scale(1.0));
+
+            var server_level = (ServerLevel)player.level();
+            var particle_pos = villager.position();
+
+            if (is_baby) {
+                particle_pos = particle_pos.add(0,0.5,0);
+                curLevelDimension.sendParticles(
+                        ParticleTypes.CLOUD, particle_pos.x, particle_pos.y, particle_pos.z,
+                        3, 0.1,0.1,0.1, 0.015
+                );
+            } else {
+                particle_pos = particle_pos.add(0,1.5,0);
+                curLevelDimension.sendParticles(
+                        ParticleTypes.CLOUD,
+                        particle_pos.x, particle_pos.y, particle_pos.z,
+                        6, 0.1,0.2,0.1, 0.015
+                );
+            }
 
             // this doesn't fucking work, it briefly keeps the job and then says, umm achtually fuck you
             // HolderGetter.Provider registries = server_level.registryAccess();
@@ -141,18 +164,26 @@ public class Villagersb implements ModInitializer {
                         if (player_has_villager) {
                             // stop carrying villager
                             context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, false);
-                            LOGGER.info("Set attachment to false");
+                            // LOGGER.info("Set attachment to false");
 
                             SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
 
                         } else {
                             context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, true);
-                            LOGGER.info("Set attachment to true");
+                            // LOGGER.info("Set attachment to true");
                             context.player().setAttached(PLAYER_HAS_BABY_VILLAGER_ATTACHMENT, ((Villager) entity).isBaby());
 
                             var profession = ((Villager) entity).getVillagerData().profession();
                             var professionResourceKey = profession.unwrapKey().orElseThrow();
                             context.player().setAttached(CARRIED_VILLAGER_PROFESSION_ATTACHMENT, professionResourceKey);
+
+                            var particle_pos = entity.position();
+                            if (((Villager) entity).isBaby()) {
+                                particle_pos = particle_pos.add(0,0.5,0);
+                            } else {
+                                particle_pos = particle_pos.add(0,1.5,0);
+                            }
+                            context.player().level().sendParticles(ParticleTypes.CLOUD, particle_pos.x, particle_pos.y, particle_pos.z, 6, 0.1,0.2,0.1, 0.015);
 
                             entity.discard();  // remove without loot appearing
                         }
@@ -161,7 +192,7 @@ public class Villagersb implements ModInitializer {
                     // just drop the villager if player is carrying it
                     if (player_has_villager) {
                         context.player().setAttached(PLAYER_HAS_VILLAGER_ATTACHMENT, false);
-                        LOGGER.info("Set attachment to false");
+                        // LOGGER.info("Set attachment to false");
 
                         SpawnVillagerNearPlayer(context.server(), context.player(), player_has_baby, carried_villager_profession);
                     }

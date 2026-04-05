@@ -54,7 +54,7 @@ public class VillagersbClient implements ClientModInitializer {
 					}
 
 					if (idOfClosestVillager != -1) {
-						client.player.sendSystemMessage(Component.literal("ID of closest villager: " + idOfClosestVillager));
+						// client.player.sendSystemMessage(Component.literal("ID of closest villager: " + idOfClosestVillager));
 
 						ServerBoundVillagersbCarryPayload payload = new ServerBoundVillagersbCarryPayload(idOfClosestVillager);
 						ClientPlayNetworking.send(payload);
