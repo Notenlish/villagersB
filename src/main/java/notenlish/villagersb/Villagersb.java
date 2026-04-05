@@ -124,7 +124,7 @@ public class Villagersb implements ModInitializer {
             var particle_pos = villager.position();
 
             if (is_baby) {
-                particle_pos = particle_pos.add(0,0.5,0);
+                particle_pos = particle_pos.add(0,1.1,0);
                 curLevelDimension.sendParticles(
                         ParticleTypes.CLOUD, particle_pos.x, particle_pos.y, particle_pos.z,
                         3, 0.1,0.1,0.1, 0.015
@@ -180,7 +180,7 @@ public class Villagersb implements ModInitializer {
 
                             var particle_pos = entity.position();
                             if (((Villager) entity).isBaby()) {
-                                particle_pos = particle_pos.add(0,0.5,0);
+                                particle_pos = particle_pos.add(0,1.1,0);
                             } else {
                                 particle_pos = particle_pos.add(0,1.5,0);
                             }
