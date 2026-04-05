@@ -11,6 +11,16 @@ It does 3 things:
 
 ---
 
+## Requirements
+
+- Use Java 25
+- Minecraft version 26.1.1
+- Fabric loader version 0.18.6
+- Fabric_api version 0.145.3+26.1.1
+
+
+---
+
 ## Dev commands
 
 .gradlew clean
