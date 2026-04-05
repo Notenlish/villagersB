@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Villager.class)
 public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
 
-    // needed because this extends abstractvillager class
+    // needed because this extends AbstractVillager class
     protected VillagersBreedDontWaitMixin(EntityType<? extends AbstractVillager> entityType, Level level) {
         super(entityType, level);
     }
@@ -31,12 +31,7 @@ public abstract class VillagersBreedDontWaitMixin extends AbstractVillager {
         // removed the check for this.getAge()
         info.setReturnValue(this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping() && !this.isBaby());
     }
-    // I am overriding this
-    /*
-    * 	in villager.java
-	public boolean canBreed() {
-		return this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping() && this.getAge() == 0;
-	}
-    * */
+
+
 
 }
